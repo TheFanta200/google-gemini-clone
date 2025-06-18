@@ -631,7 +631,7 @@ start_services() {
         return 1
     fi
     
-    if systemctl is_active --quiet nginx; then
+    if systemctl is-active --quiet nginx; then
         print_success "✅ Nginx démarré"
     else
         print_error "❌ Erreur lors du démarrage de Nginx"
