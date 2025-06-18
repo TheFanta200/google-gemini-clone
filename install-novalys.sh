@@ -219,8 +219,31 @@ setup_application() {
         sudo -u ${SERVICE_USER} rmdir temp_clone
     else
         print_status "Installation fraîche - Clonage du dépôt GitHub..."
-        cd ${APP_DIR}
-        sudo -u ${SERVICE_USER} git clone ${REPO_URL} .
+        
+        # Vérifier si le répertoire est vide
+        if [ "$(ls -A ${APP_DIR} 2>/dev/null)" ]; then
+            print_status "Répertoire non vide détecté - Utilisation de la méthode alternative..."
+            cd ${APP_DIR}
+            
+            # Sauvegarder les fichiers .env existants
+            if [ -f ".env" ]; then
+                cp .env /tmp/novalys_env_backup_$(date +%Y%m%d_%H%M%S)
+                CONFIG_BACKUP=true
+            fi
+            
+            # Nettoyer le répertoire mais garder la structure
+            find . -mindepth 1 -not -name '.env' -delete 2>/dev/null || true
+            
+            # Cloner dans un répertoire temporaire puis déplacer
+            sudo -u ${SERVICE_USER} git clone ${REPO_URL} temp_clone
+            sudo -u ${SERVICE_USER} mv temp_clone/* . 2>/dev/null || true
+            sudo -u ${SERVICE_USER} mv temp_clone/.[^.]* . 2>/dev/null || true
+            sudo -u ${SERVICE_USER} rmdir temp_clone
+        else
+            # Répertoire vide, clonage direct
+            cd ${APP_DIR}
+            sudo -u ${SERVICE_USER} git clone ${REPO_URL} .
+        fi
     fi
     
     # Restaurer la configuration si elle existait
@@ -608,7 +631,7 @@ start_services() {
         return 1
     fi
     
-    if systemctl is-active --quiet nginx; then
+    if systemctl is_active --quiet nginx; then
         print_success "✅ Nginx démarré"
     else
         print_error "❌ Erreur lors du démarrage de Nginx"
