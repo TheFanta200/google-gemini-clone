@@ -247,13 +247,39 @@ setup_application() {
         cd ${APP_DIR}
         find . -mindepth 1 -maxdepth 1 ! -name '.env' -exec rm -rf {} + 2>/dev/null || true
         
-        # Cloner dans un répertoire temporaire
-        TEMP_DIR=$(mktemp -d)
-        sudo -u ${SERVICE_USER} git clone ${REPO_URL} "$TEMP_DIR"
+        # Créer un répertoire temporaire unique et le nettoyer s'il existe
+        TEMP_DIR="/tmp/novalys_clone_$(date +%Y%m%d_%H%M%S)_$$"
+        rm -rf "$TEMP_DIR" 2>/dev/null || true
         
-        # Déplacer le contenu
-        sudo -u ${SERVICE_USER} cp -r "$TEMP_DIR"/. ${APP_DIR}/
-        rm -rf "$TEMP_DIR"
+        # Cloner dans le répertoire temporaire
+        if sudo -u ${SERVICE_USER} git clone ${REPO_URL} "$TEMP_DIR"; then
+            # Déplacer le contenu vers le répertoire final
+            sudo -u ${SERVICE_USER} cp -r "$TEMP_DIR"/. ${APP_DIR}/
+            rm -rf "$TEMP_DIR"
+            print_success "Code source cloné avec succès"
+        else
+            print_error "Échec du clonage Git"
+            rm -rf "$TEMP_DIR" 2>/dev/null || true
+            
+            # Méthode alternative : téléchargement direct du ZIP
+            print_status "Tentative de téléchargement via ZIP..."
+            cd ${APP_DIR}
+            
+            # Télécharger l'archive ZIP
+            sudo -u ${SERVICE_USER} curl -L https://github.com/TheFanta200/google-gemini-clone/archive/refs/heads/main.zip -o novalys.zip
+            
+            # Extraire l'archive
+            sudo -u ${SERVICE_USER} unzip -q novalys.zip
+            
+            # Déplacer les fichiers
+            sudo -u ${SERVICE_USER} mv google-gemini-clone-main/* . 2>/dev/null || true
+            sudo -u ${SERVICE_USER} mv google-gemini-clone-main/.[^.]* . 2>/dev/null || true
+            
+            # Nettoyer
+            sudo -u ${SERVICE_USER} rm -rf google-gemini-clone-main novalys.zip
+            
+            print_success "Code source téléchargé via ZIP"
+        fi
     fi
     
     # Restaurer la configuration si elle existait
