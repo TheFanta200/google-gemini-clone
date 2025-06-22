@@ -82,7 +82,7 @@ if curl -fsSL "$INSTALL_SCRIPT_URL" -o /tmp/install-novalys.sh; then
         echo -e "${GREEN}[GCP-STARTUP]${NC} 🎉 NOVALYS installé et configuré avec succès !"
         echo -e "${GREEN}[GCP-STARTUP]${NC} 🌐 Accès: http://$VM_IP"
         echo -e "${GREEN}[GCP-STARTUP]${NC} 🔒 HTTPS: https://$VM_IP"
-        echo -e "${GREEN}[GCP-STARTUP]${NC] ================================================"
+        echo -e "${GREEN}[GCP-STARTUP]${NC} ================================================"
         
         # Marquer l'installation comme terminée
         echo "INSTALLATION_COMPLETE=$(date)" >> "$LOCK_FILE"
