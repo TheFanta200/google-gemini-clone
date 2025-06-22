@@ -60,7 +60,7 @@ done
 echo -e "${BLUE}[GCP-STARTUP]${NC} Téléchargement du script d'installation NOVALYS..."
 
 # URL du script d'installation
-INSTALL_SCRIPT_URL="https://raw.githubusercontent.com/TheFanta200/google-gemini-clone/main/install-novalys.sh"
+INSTALL_SCRIPT_URL="https://raw.githubusercontent.com/TheFanta200/google-gemini-clone/main/install-novalys-auto.sh"
 
 # Télécharger le script avec gestion d'erreur
 if curl -fsSL "$INSTALL_SCRIPT_URL" -o /tmp/install-novalys.sh; then
