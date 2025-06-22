@@ -174,12 +174,37 @@ install_nodejs() {
 create_user() {
     print_header "👤 CONFIGURATION UTILISATEUR"
     
+    # Créer d'abord le répertoire de l'application avec les bonnes permissions
+    if [ ! -d "${APP_DIR}" ]; then
+        print_status "Création du répertoire ${APP_DIR}..."
+        mkdir -p ${APP_DIR}
+        print_success "Répertoire ${APP_DIR} créé"
+    else
+        print_status "Répertoire ${APP_DIR} existe déjà"
+    fi
+    
     if ! id "${SERVICE_USER}" &>/dev/null; then
         print_status "Création de l'utilisateur ${SERVICE_USER}..."
-        useradd -r -s /bin/bash -d ${APP_DIR} -m ${SERVICE_USER}
-        print_success "Utilisateur ${SERVICE_USER} créé"
+        
+        # Créer l'utilisateur sans répertoire personnel d'abord
+        useradd -r -s /bin/bash ${SERVICE_USER} 2>/dev/null || {
+            print_warning "L'utilisateur ${SERVICE_USER} existe peut-être déjà, tentative de modification..."
+            usermod -s /bin/bash -d ${APP_DIR} ${SERVICE_USER} 2>/dev/null || true
+        }
+        
+        # Définir le répertoire personnel après création
+        usermod -d ${APP_DIR} ${SERVICE_USER}
+        
+        # S'assurer que l'utilisateur possède son répertoire
+        chown -R ${SERVICE_USER}:${SERVICE_USER} ${APP_DIR}
+        
+        print_success "Utilisateur ${SERVICE_USER} créé et configuré"
     else
         print_status "L'utilisateur ${SERVICE_USER} existe déjà"
+        
+        # S'assurer que l'utilisateur a les bonnes permissions sur son répertoire
+        chown -R ${SERVICE_USER}:${SERVICE_USER} ${APP_DIR}
+        print_status "Permissions mises à jour pour l'utilisateur ${SERVICE_USER}"
     fi
     
     echo ""
